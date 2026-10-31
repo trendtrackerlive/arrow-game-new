@@ -3,595 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arrow Unblock Puzzle - Trend Tracker Live</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <title>Arrow Puzzle Game - Trend Tracker Live</title>
     <style>
-        * {
-            font-family: 'Outfit', sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-
-        /* Glassmorphism Styles */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        /* Neon & Glow Effects */
-        .glow-cyan {
-            box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
-        }
-        .glow-amber {
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
-        }
-
-        /* Arrow Tile Animations */
-        .arrow-btn {
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s, background-color 0.15s;
-        }
-
-        .arrow-btn:hover {
-            filter: brightness(1.2);
-            z-index: 10;
-        }
-
-        .arrow-btn:active {
-            transform: scale(0.92);
-        }
-
-        /* Custom Scrollbar for Blogger widgets */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #090d16;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-
-        @keyframes pulseHint {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0px rgba(245, 158, 11, 0); }
-            50% { transform: scale(1.08); box-shadow: 0 0 20px rgba(245, 158, 11, 0.9); }
-        }
-        .hint-active {
-            animation: pulseHint 0.8s infinite ease-in-out;
-            z-index: 20 !important;
-            border-color: #f59e0b !important;
-            background: #78350f !important;
-            color: #fbbf24 !important;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 10px; }
+        .game-container { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header h1 { font-size: 1.2rem; color: #38bdf8; }
+        .stats { display: flex; gap: 15px; font-size: 0.9rem; background: #0f172a; padding: 8px 12px; border-radius: 8px; border: 1px solid #334155; }
+        .grid { display: grid; gap: 4px; background: #0f172a; padding: 10px; border-radius: 12px; margin-bottom: 20px; justify-content: center; border: 2px solid #334155; }
+        .cell { aspect-ratio: 1; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border-radius: 6px; cursor: pointer; user-select: none; transition: all 0.15s ease; color: #f8fafc; }
+        .cell:hover { background: #475569; transform: scale(1.05); }
+        .cell.cleared { background: #065f46; color: #34d399; opacity: 0.4; pointer-events: none; }
+        .controls { display: flex; gap: 10px; justify-content: center; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: background 0.2s; }
+        button:hover { background: #1d4ed8; }
+        button.secondary { background: #475569; }
+        button.secondary:hover { background: #334155; }
+        .win-message { margin-top: 15px; font-size: 1.1rem; color: #34d399; font-weight: bold; display: none; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 overflow-x-hidden">
-
-    <!-- Top Header & Branding Bar -->
-    <header class="w-full max-w-2xl flex items-center justify-between my-2 px-2">
-        <a href="https://trendtrackerlive.com" target="_blank" rel="noopener" class="flex items-center gap-2.5 group">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-fuchsia-600 flex items-center justify-center font-black text-white text-2xl shadow-lg group-hover:scale-105 transition-transform">
-                T
-            </div>
-            <div class="flex flex-col">
-                <span class="text-[10px] font-extrabold tracking-widest text-cyan-400 uppercase leading-none">Trend Tracker Live</span>
-                <span class="text-xl font-black tracking-tight text-white group-hover:text-cyan-300 transition-colors">ARROW ESCAPE MAX</span>
-            </div>
-        </a>
-
-        <!-- Controls -->
-        <div class="flex items-center gap-2">
-            <button id="soundToggleBtn" onclick="game.toggleSound()" class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
-                <i id="soundIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
-            </button>
-            <button onclick="game.showHelpModal()" class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
-                <i class="fa-solid fa-circle-question text-cyan-400"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Game Container -->
-    <main class="w-full max-w-2xl flex-1 flex flex-col items-center justify-center">
-        <div class="w-full glass-panel rounded-3xl p-3 sm:p-5 shadow-2xl relative flex flex-col items-center border border-slate-800">
-            
-            <!-- Level Info Bar -->
-            <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800/80 px-1">
-                <div class="flex items-center gap-2">
-                    <span id="levelBadge" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black px-3 py-1 rounded-xl text-xs sm:text-sm shadow">
-                        Level 1
-                    </span>
-                    <span id="gridDimBadge" class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-800 text-cyan-400 border border-slate-700">
-                        5x5 Grid
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-3 text-xs sm:text-sm font-bold">
-                    <div class="flex items-center gap-1.5 text-slate-300">
-                        <i class="fa-solid fa-clock text-cyan-400"></i>
-                        <span id="timerDisplay" class="font-mono text-white">00:00</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 text-slate-300">
-                        <i class="fa-solid fa-footsteps text-indigo-400"></i>
-                        <span>Moves: <strong id="moveCounter" class="text-white font-mono">0</strong></span>
-                    </div>
-                    <div class="flex items-center gap-1.5 text-slate-300">
-                        <i class="fa-solid fa-trophy text-amber-400"></i>
-                        <span>Score: <strong id="scoreCounter" class="text-amber-300 font-mono">0</strong></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dynamic Grid Canvas Container -->
-            <div class="relative w-full aspect-square max-w-[500px] bg-slate-950 rounded-2xl p-2 sm:p-3 border border-slate-800 shadow-inner flex items-center justify-center my-1 overflow-hidden">
-                <div id="gridBoard" class="grid w-full h-full gap-1 sm:gap-1.5 relative">
-                    <!-- Dynamic Grid Tiles generated by JS -->
-                </div>
-            </div>
-
-            <!-- Bottom Action Controls -->
-            <div class="w-full flex items-center justify-between gap-2 sm:gap-3 mt-3">
-                <button onclick="game.resetLevel()" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all border border-slate-800">
-                    <i class="fa-solid fa-rotate-left text-cyan-400"></i>
-                    <span>Restart</span>
-                </button>
-
-                <button onclick="game.getHint()" class="flex-1 py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all border border-amber-500/30">
-                    <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                    <span>Hint</span>
-                </button>
-
-                <button onclick="game.skipLevel()" class="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-400 hover:text-white font-bold text-xs sm:text-sm transition-all border border-slate-800 flex items-center gap-1.5">
-                    <span>Skip</span>
-                    <i class="fa-solid fa-forward"></i>
-                </button>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Arrow Puzzle</h1>
+            <div class="stats">
+                <div>Lvl: <span id="level-num">1</span></div>
+                <div>Moves: <span id="move-count">0</span></div>
             </div>
         </div>
-    </main>
-
-    <!-- Footer Links -->
-    <footer class="w-full max-w-2xl text-center py-2 text-[11px] text-slate-500">
-        Created for <a href="https://trendtrackerlive.com" target="_blank" class="text-cyan-400 hover:underline font-bold">TrendTrackerLive.com</a> &bull; Dense Arrow Unblocker
-    </footer>
-
-    <!-- Instructions Modal -->
-    <div id="helpModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass-panel max-w-md w-full rounded-3xl p-6 border border-slate-700 shadow-2xl transform scale-95 transition-transform duration-300" id="helpModalContent">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-compass text-cyan-400"></i> Game Rules
-                </h3>
-                <button onclick="game.hideHelpModal()" class="text-slate-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            
-            <div class="py-4 space-y-3 text-sm text-slate-300">
-                <div class="flex items-start gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 font-bold">1</div>
-                    <p>Tap an arrow tile. It shoots forward in the direction of its tip.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 font-bold">2</div>
-                    <p>If another arrow blocks its exit path, it will bump and stay on the board.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 font-bold">3</div>
-                    <p>Clear all arrows completely off the board to beat the level!</p>
-                </div>
-            </div>
-
-            <button onclick="game.hideHelpModal()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg transition-all">
-                Play Now
-            </button>
+        <div id="grid" class="grid"></div>
+        <div class="win-message" id="win-msg">🎉 Level Cleared! Next level loading...</div>
+        <div class="controls">
+            <button onclick="initGame()">Reset Level</button>
+            <button class="secondary" onclick="nextLevel()" id="next-btn" style="display:none;">Next Level</button>
         </div>
     </div>
 
-    <!-- Win Modal -->
-    <div id="winModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass-panel max-w-sm w-full rounded-3xl p-6 border border-cyan-500/30 text-center shadow-2xl transform scale-95 transition-transform duration-300" id="winModalContent">
-            <div class="w-16 h-16 bg-gradient-to-tr from-cyan-500 to-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl text-white shadow-lg glow-cyan">
-                <i class="fa-solid fa-trophy"></i>
-            </div>
-            <h2 class="text-2xl font-black text-white mb-1">Level Cleared!</h2>
-            <p id="winSubtext" class="text-xs text-slate-400 mb-4">You cleared all arrows from the board!</p>
-
-            <div class="bg-slate-900/80 rounded-xl p-3 flex justify-around mb-5 border border-slate-800">
-                <div>
-                    <div class="text-[10px] uppercase text-slate-400 font-bold">Time</div>
-                    <div id="modalTime" class="text-base font-black text-cyan-400 font-mono">00:00</div>
-                </div>
-                <div class="border-r border-slate-800"></div>
-                <div>
-                    <div class="text-[10px] uppercase text-slate-400 font-bold">Moves</div>
-                    <div id="modalMoves" class="text-base font-black text-indigo-400 font-mono">0</div>
-                </div>
-                <div class="border-r border-slate-800"></div>
-                <div>
-                    <div class="text-[10px] uppercase text-slate-400 font-bold">Score</div>
-                    <div id="modalScore" class="text-base font-black text-amber-400 font-mono">+100</div>
-                </div>
-            </div>
-
-            <button onclick="game.nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg glow-cyan transition-all">
-                Next Level <i class="fa-solid fa-arrow-right ml-1"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- JavaScript Game Engine Core -->
     <script>
-        class DenseArrowPuzzleGame {
-            constructor() {
-                this.level = 1;
-                this.score = 0;
-                this.moves = 0;
-                this.gridSize = 5; // Base dimension
-                this.grid = []; 
-                this.isMuted = false;
-                this.seconds = 0;
-                this.timerInterval = null;
+        let level = 1;
+        let moves = 0;
+        let gridSize = 6; // Denser grid with lots of arrows
+        let gridData = [];
+        const arrows = ['⬆️', '➡️', '⬇️', '⬅️'];
+        const dx = [0, 1, 0, -1];
+        const dy = [-1, 0, 1, 0];
 
-                // Web Audio API Synthesizer
-                this.audioCtx = null;
+        function initGame() {
+            moves = 0;
+            document.getElementById('move-count').innerText = moves;
+            document.getElementById('level-num').innerText = level;
+            document.getElementById('win-msg').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            
+            // Scale grid size with levels (from 6x6 up to 9x9)
+            gridSize = Math.min(6 + Math.floor((level - 1) / 2), 9);
+            
+            generatePuzzle();
+            renderGrid();
+        }
 
-                this.directions = {
-                    'UP':    { dx: 0,  dy: -1, icon: 'fa-arrow-up' },
-                    'RIGHT': { dx: 1,  dy: 0,  icon: 'fa-arrow-right' },
-                    'DOWN':  { dx: 0,  dy: 1,  icon: 'fa-arrow-down' },
-                    'LEFT':  { dx: -1, dy: 0,  icon: 'fa-arrow-left' }
-                };
-
-                this.initAudio();
-                this.loadLevel(this.level);
-            }
-
-            initAudio() {
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.audioCtx = new AudioContext();
-                } catch(e) {}
-            }
-
-            playTone(freq, type = 'sine', duration = 0.12) {
-                if (this.isMuted || !this.audioCtx) return;
-                if (this.audioCtx.state === 'suspended') {
-                    this.audioCtx.resume();
+        function generatePuzzle() {
+            gridData = Array(gridSize).fill(0).map(() => Array(gridSize).fill(0));
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    gridData[r][c] = {
+                        dir: Math.floor(Math.random() * 4),
+                        cleared: false
+                    };
                 }
-                try {
-                    const osc = this.audioCtx.createOscillator();
-                    const gain = this.audioCtx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(this.audioCtx.destination);
-                    osc.start();
-                    osc.stop(this.audioCtx.currentTime + duration);
-                } catch(e){}
-            }
-
-            toggleSound() {
-                this.isMuted = !this.isMuted;
-                const soundIcon = document.getElementById('soundIcon');
-                if (this.isMuted) {
-                    soundIcon.className = 'fa-solid fa-volume-xmark text-slate-500';
-                } else {
-                    soundIcon.className = 'fa-solid fa-volume-high text-cyan-400';
-                    this.playTone(523.25, 'sine', 0.1);
-                }
-            }
-
-            startTimer() {
-                clearInterval(this.timerInterval);
-                this.seconds = 0;
-                this.updateTimerDisplay();
-                this.timerInterval = setInterval(() => {
-                    this.seconds++;
-                    this.updateTimerDisplay();
-                }, 1000);
-            }
-
-            updateTimerDisplay() {
-                const mins = Math.floor(this.seconds / 60).toString().padStart(2, '0');
-                const secs = (this.seconds % 60).toString().padStart(2, '0');
-                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
-            }
-
-            // Grid size scales up with levels (5x5 -> 6x6 -> 7x7 ... up to 10x10)
-            getGridDimension(lvl) {
-                if (lvl <= 2) return 5;  // 25 tiles
-                if (lvl <= 5) return 6;  // 36 tiles
-                if (lvl <= 9) return 7;  // 49 tiles
-                if (lvl <= 14) return 8; // 64 tiles
-                if (lvl <= 20) return 9; // 81 tiles
-                return 10;               // 100 tiles (dense max)
-            }
-
-            // Reverse-Assembly Solvable Puzzle Generator (Guarantees solution)
-            generateSolvableLevel(size) {
-                let board = Array(size).fill(null).map(() => Array(size).fill(null));
-                const dirKeys = Object.keys(this.directions);
-
-                // Step 1: Fill grid densely with random directions
-                for (let r = 0; r < size; r++) {
-                    for (let c = 0; c < size; c++) {
-                        board[r][c] = {
-                            dir: dirKeys[Math.floor(Math.random() * dirKeys.length)],
-                            id: `arrow_${r}_${c}_${Math.random().toString(36).substr(2, 5)}`
-                        };
-                    }
-                }
-
-                // Step 2: Ensure grid is 100% solvable by running simulation
-                let attempts = 0;
-                while (!this.isGridFullySolvable(board, size) && attempts < 100) {
-                    // Tweak random blocked tiles
-                    let r = Math.floor(Math.random() * size);
-                    let c = Math.floor(Math.random() * size);
-                    board[r][c].dir = dirKeys[Math.floor(Math.random() * dirKeys.length)];
-                    attempts++;
-                }
-
-                return board;
-            }
-
-            isGridFullySolvable(board, size) {
-                // Clone board
-                let testBoard = board.map(row => row.map(cell => cell ? { ...cell } : null));
-                let clearedCount = 0;
-                let totalArrows = size * size;
-                let progressMade = true;
-
-                while (progressMade) {
-                    progressMade = false;
-                    for (let r = 0; r < size; r++) {
-                        for (let c = 0; c < size; c++) {
-                            if (testBoard[r][c] && this.canEscape(testBoard, size, r, c)) {
-                                testBoard[r][c] = null;
-                                clearedCount++;
-                                progressMade = true;
-                            }
-                        }
-                    }
-                }
-
-                return clearedCount === totalArrows;
-            }
-
-            canEscape(board, size, row, col) {
-                const tile = board[row][col];
-                if (!tile) return false;
-
-                const dirInfo = this.directions[tile.dir];
-                let currR = row + dirInfo.dy;
-                let currC = col + dirInfo.dx;
-
-                while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
-                    if (board[currR][currC] !== null) {
-                        return false; // Path blocked
-                    }
-                    currR += dirInfo.dy;
-                    currC += dirInfo.dx;
-                }
-
-                return true; // Path is clear
-            }
-
-            loadLevel(lvl) {
-                this.gridSize = this.getGridDimension(lvl);
-                this.grid = this.generateSolvableLevel(this.gridSize);
-                this.moves = 0;
-                this.startTimer();
-                this.updateUI();
-                this.renderBoard();
-            }
-
-            updateUI() {
-                document.getElementById('levelBadge').innerText = `Level ${this.level}`;
-                document.getElementById('gridDimBadge').innerText = `${this.gridSize}x${this.gridSize} Grid`;
-                document.getElementById('moveCounter').innerText = this.moves;
-                document.getElementById('scoreCounter').innerText = this.score;
-            }
-
-            renderBoard() {
-                const boardEl = document.getElementById('gridBoard');
-                boardEl.innerHTML = '';
-                boardEl.style.gridTemplateColumns = `repeat(${this.gridSize}, minmax(0, 1fr))`;
-                boardEl.style.gridTemplateRows = `repeat(${this.gridSize}, minmax(0, 1fr))`;
-
-                // Adjust icon sizes based on grid dimension
-                let iconSizeClass = 'text-base sm:text-lg';
-                if (this.gridSize >= 7) iconSizeClass = 'text-xs sm:text-sm';
-                if (this.gridSize >= 9) iconSizeClass = 'text-[10px] sm:text-xs';
-
-                for (let r = 0; r < this.gridSize; r++) {
-                    for (let c = 0; c < this.gridSize; c++) {
-                        const cell = document.createElement('div');
-                        cell.className = 'relative w-full h-full flex items-center justify-center rounded-lg bg-slate-900/60 border border-slate-800/60';
-
-                        const tileData = this.grid[r][c];
-                        if (tileData) {
-                            const arrowBtn = document.createElement('button');
-                            const dirInfo = this.directions[tileData.dir];
-
-                            arrowBtn.className = `arrow-btn w-full h-full rounded-md sm:rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 shadow flex items-center justify-center text-cyan-400 hover:border-cyan-400 hover:text-white`;
-                            arrowBtn.id = tileData.id;
-                            
-                            arrowBtn.innerHTML = `<i class="fa-solid ${dirInfo.icon} ${iconSizeClass}"></i>`;
-                            arrowBtn.onclick = () => this.handleArrowClick(r, c);
-                            cell.appendChild(arrowBtn);
-                        }
-
-                        boardEl.appendChild(cell);
-                    }
-                }
-            }
-
-            handleArrowClick(row, col) {
-                const tile = this.grid[row][col];
-                if (!tile) return;
-
-                this.moves++;
-                document.getElementById('moveCounter').innerText = this.moves;
-
-                if (this.canEscape(this.grid, this.gridSize, row, col)) {
-                    // Escape!
-                    this.playTone(587.33, 'triangle', 0.12);
-                    this.animateEscape(row, col, tile.dir);
-                } else {
-                    // Blocked Bump
-                    this.playTone(160, 'sawtooth', 0.1);
-                    this.animateBump(tile.id, tile.dir);
-                }
-            }
-
-            animateEscape(row, col, dir) {
-                const tileEl = document.getElementById(this.grid[row][col].id);
-                if (!tileEl) return;
-
-                const dist = 300;
-                const translateMap = {
-                    'UP': `translateY(-${dist}px) scale(0.2)`,
-                    'RIGHT': `translateX(${dist}px) scale(0.2)`,
-                    'DOWN': `translateY(${dist}px) scale(0.2)`,
-                    'LEFT': `translateX(-${dist}px) scale(0.2)`
-                };
-
-                tileEl.style.transform = translateMap[dir];
-                tileEl.style.opacity = '0';
-                
-                this.grid[row][col] = null;
-
-                setTimeout(() => {
-                    this.renderBoard();
-                    this.checkWinCondition();
-                }, 150);
-            }
-
-            animateBump(id, dir) {
-                const tileEl = document.getElementById(id);
-                if (!tileEl) return;
-
-                const bumpMap = {
-                    'UP': [ { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' } ],
-                    'RIGHT': [ { transform: 'translateX(6px)' }, { transform: 'translateX(0)' } ],
-                    'DOWN': [ { transform: 'translateY(6px)' }, { transform: 'translateY(0)' } ],
-                    'LEFT': [ { transform: 'translateX(-6px)' }, { transform: 'translateX(0)' } ]
-                };
-
-                tileEl.animate(bumpMap[dir], { duration: 120, iterations: 1 });
-                tileEl.classList.add('border-rose-500', 'text-rose-400');
-                setTimeout(() => {
-                    tileEl.classList.remove('border-rose-500', 'text-rose-400');
-                }, 250);
-            }
-
-            getHint() {
-                for (let r = 0; r < this.gridSize; r++) {
-                    for (let c = 0; c < this.gridSize; c++) {
-                        if (this.grid[r][c] && this.canEscape(this.grid, this.gridSize, r, c)) {
-                            const hintTile = document.getElementById(this.grid[r][c].id);
-                            if (hintTile) {
-                                this.playTone(880, 'sine', 0.2);
-                                hintTile.classList.add('hint-active');
-                                setTimeout(() => {
-                                    hintTile.classList.remove('hint-active');
-                                }, 1400);
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-
-            checkWinCondition() {
-                let isEmpty = true;
-                for (let r = 0; r < this.gridSize; r++) {
-                    for (let c = 0; c < this.gridSize; c++) {
-                        if (this.grid[r][c] !== null) {
-                            isEmpty = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (isEmpty) {
-                    clearInterval(this.timerInterval);
-                    const pointsGained = Math.max(50, (this.gridSize * 40) - (this.moves * 2));
-                    this.score += pointsGained;
-
-                    this.playTone(523.25, 'sine', 0.1);
-                    setTimeout(() => this.playTone(659.25, 'sine', 0.1), 90);
-                    setTimeout(() => this.playTone(783.99, 'sine', 0.25), 180);
-
-                    document.getElementById('modalMoves').innerText = this.moves;
-                    document.getElementById('modalTime').innerText = document.getElementById('timerDisplay').innerText;
-                    document.getElementById('modalScore').innerText = `+${pointsGained}`;
-                    this.showWinModal();
-                }
-            }
-
-            resetLevel() {
-                this.loadLevel(this.level);
-            }
-
-            skipLevel() {
-                this.level++;
-                this.loadLevel(this.level);
-            }
-
-            nextLevel() {
-                this.hideWinModal();
-                this.level++;
-                this.loadLevel(this.level);
-            }
-
-            showHelpModal() {
-                const modal = document.getElementById('helpModal');
-                const content = document.getElementById('helpModalContent');
-                modal.classList.remove('opacity-0', 'pointer-events-none');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }
-
-            hideHelpModal() {
-                const modal = document.getElementById('helpModal');
-                const content = document.getElementById('helpModalContent');
-                modal.classList.add('opacity-0', 'pointer-events-none');
-                content.classList.remove('scale-100');
-                content.classList.add('scale-95');
-            }
-
-            showWinModal() {
-                const modal = document.getElementById('winModal');
-                const content = document.getElementById('winModalContent');
-                modal.classList.remove('opacity-0', 'pointer-events-none');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }
-
-            hideWinModal() {
-                const modal = document.getElementById('winModal');
-                const content = document.getElementById('winModalContent');
-                modal.classList.add('opacity-0', 'pointer-events-none');
-                content.classList.remove('scale-100');
-                content.classList.add('scale-95');
             }
         }
 
-        let game = null;
-        window.addEventListener('DOMContentLoaded', () => {
-            game = new DenseArrowPuzzleGame();
-        });
+        function renderGrid() {
+            const gridEl = document.getElementById('grid');
+            gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (gridData[r][c].cleared) {
+                        cell.classList.add('cleared');
+                    }
+                    cell.innerHTML = arrows[gridData[r][c].dir];
+                    cell.onclick = () => handleCellClick(r, c);
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            if (gridData[r][c].cleared) return;
+            
+            moves++;
+            document.getElementById('move-count').innerText = moves;
+
+            // Follow arrow direction until it hits edge or another cleared cell
+            let currR = r;
+            let currC = c;
+            let d = gridData[r][c].dir;
+
+            while (true) {
+                gridData[currR][currC].cleared = true;
+                currR += dy[d];
+                currC += dx[d];
+
+                if (currR < 0 || currR >= gridSize || currC < 0 || currC >= gridSize) break;
+                if (gridData[currR][currC].cleared) break;
+            }
+
+            renderGrid();
+            checkWin();
+        }
+
+        function checkWin() {
+            let allCleared = true;
+            for (let r = 0.0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (!gridData[r][c].cleared) {
+                        allCleared = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allCleared) {
+                document.getElementById('win-msg').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'block';
+            }
+        }
+
+        function nextLevel() {
+            level++;
+            initGame();
+        }
+
+        initGame();
     </script>
 </body>
 </html>
